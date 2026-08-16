@@ -74,8 +74,67 @@ duration_id = 1 if duration == "1-5" else 2
 complications = st.selectbox("Complications Status", ["No Complications", "yes"])
 comp_id = 0 if complications == "No Complications" else 1
 
-# Action Trigger Button
+ # Action Trigger Button
 if st.button("Get Recommended Treatment Plan", type="primary"):
-    st.write("Querying database using background IDs...")
-    st.write(f"Parameters sent: Age ID: {age_id} | BMI ID: {bmi_id} | Sugar ID: {su_id} | Duration ID: {duration_id} | Comp ID: {comp_id}")
-    # Your pyodbc / st.connection logic goes here using these ID integers
+    st.write("🔄 Querying database using background IDs...")
+    
+    try:
+        # 1. Build the database connection string
+        conn_str = (
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"SERVER={st.secrets['server']};"
+            f"DATABASE={st.secrets['database']};"
+            f"UID={st.secrets['username']};"
+            f"PWD={st.secrets['password']};"
+            "Encrypt=yes;"
+            "TrustServerCertificate=no;"
+            "Connection Timeout=30;"
+        )
+        
+        # 2. Open database connection
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+        # 3. Parameterized SQL query
+        # ⚠️ Change 'your_table_name' below to your actual Azure SQL table name!
+        query = """
+            SELECT drug_recommendation, hypoglycemia_alert, lifestyle_prescription
+            FROM your_table_name 
+            WHERE age_id = ? 
+              AND bmi_id = ? 
+              AND su_id = ? 
+              AND duration_id = ? 
+              AND comp_id = ?
+        """
+        
+        # 4. Execute the query using the background variables
+        cursor.execute(query, (age_id, bmi_id, su_id, duration_id, comp_id))
+        row = cursor.fetchone()
+        
+        # 5. Render database fields directly onto the screen layout
+        if row:
+            st.success("✅ Records successfully retrieved from database!")
+            
+            # Area 1: Recommended Treatment Plan
+            st.header("💉 Recommended Treatment Plan")
+            st.write(row[0])
+            
+            # Area 2: Hypoglycemia Alert
+            st.warning("⚠️ Critical Safety Monitor: Hypoglycemia Alert Protocols")
+            st.write(row[1])
+            
+            # Area 3: Lifestyle Prescription
+            st.header("🥗 Structured Lifestyle Prescription Matrix")
+            st.write(row[2])
+            
+        else:
+            st.warning("⚠️ No exact clinical match found in the database matrix for these specific ID parameters.")
+            st.caption(f"Debug Info: Sent IDs -> Age:{age_id}, BMI:{bmi_id}, Sugar:{su_id}, Duration:{duration_id}, Comp:{comp_id}")
+            
+        # 6. Clean close operations
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        st.error("❌ Database Connection Error occurred.")
+        st.code(str(e))

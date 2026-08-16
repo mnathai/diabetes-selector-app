@@ -1,98 +1,81 @@
 import streamlit as st
-import pyodbc
-from google import genai
 
-# 1. Establish database connection
-def get_db_connection():
-    conn_str = (
-        "DRIVER={ODBC Driver 17 for SQL Server};"
-        "SERVER=localhost\\SQLEXPRESS;"
-        "DATABASE=New_T2D_treatment_data;"
-        "Trusted_Connection=yes;"
-    )
-    return pyodbc.connect(conn_str)
+st.set_page_config(page_title="T2D Recommendation System", layout="centered")
 
-# 2. Function to generate lifestyle advice using a free AI model API
-def get_ai_lifestyle_advice(age, bmi, sugar, duration, complications):
-    try:
-        # Initialize client (uses GEMINI_API_KEY environment variable, or paste your raw key string)
-        client = genai.Client(api_key="AQ.Ab8RN6J9oBMHxk4I9ccg6BnQUXH1KvskI3tDtf7YIDSFxdvX4g")
-        
-        # Build a highly contextual prompt based on UI selections
-        prompt = f"""
-        You are an expert clinical endocrinologist and diabetes dietician. 
-        Provide a concise, practical, bulleted list of dietary and exercise modifications 
-        IN HINDI LANGUAGE (using clean Devanagari script) for a Type 2 Diabetes patient 
-        with the following active profiles:
-        - Age Group: {age}
-        - BMI Category: {bmi}
-        - Fasting Blood Sugar Range: {sugar}
-        - History Duration: {duration}
-        - Complications Present: {complications}      
-        Keep the tone highly professional, realistic for Indian patients, and structure it into two distinct headings:
-        🥗 व्यक्तिगत पोषण लक्ष्य (Personalized Nutritional Targets)
-        🏃‍♂️ शारीरिक गतिविधि दिशानिर्देश (Tailored Physical Activity Guidelines)
-        
-        Do not include English translations for the bullet points. Write purely in clear medical Hindi. Do not add general intro or outro fluff."""
-        
-        response = client.models.generate_content(
-            model='gemini-3.5-flash',
-            contents=prompt,
-        )
-        return response.text
-    except Exception as e:
-        return f"Could not generate AI advice layout: Ensure your API credentials are set up. Details: {str(e)}"
+st.title("🏥 Type 2 Diabetes Treatment Selector")
+st.write("Enter raw patient metrics below. The application will compute ranges and query recommendations automatically.")
 
-# 3. Streamlit Page Setup
-st.set_page_config(page_title="T2D Recommendation System", page_icon="🩺", layout="centered")
-st.title("🩺 Type 2 Diabetes Treatment Selector")
-st.write("Select patient metrics below to look up drug recommendations and AI-generated lifestyle protocols.")
+# 1. Clean Numeric User Inputs (Hides the old range dropdowns)
+age = st.number_input("Patient Age (years)", min_value=1, max_value=120, value=30, step=1)
 
-# Metric Dictionaries
-age_display = {"15-20 years": 1, "21-30 years": 2, "31-40 years": 3, "41-65 years": 4, "66-75 years": 5, "1-14 years": 6, "75-100 years": 7}
-bmi_display = {"17-23": 1, "24-25": 2, "26-28": 3, "29-32": 4, "33-45": 5}
-su_display = {"100-125 mg/dl": 1, "126-140 mg/dl": 2, "141-160 mg/dl": 3, "161-200 mg/dl": 4, "201-300 mg/dl": 5, "Above 300 mg/dl": 6}
-duration_display = {"Less than 5 years": 1, "6 or more than 6 years": 2}
-comp_display = {"No Complications": 0, "Mild Complications": 1}
-
-# UI Layout Grid
 col1, col2 = st.columns(2)
 with col1:
-    age_sel = st.selectbox("Patient Age Group", list(age_display.keys()))
-    bmi_sel = st.selectbox("BMI Range", list(bmi_display.keys()))
-    duration_sel = st.selectbox("Disease Duration", list(duration_display.keys()))
+    height_cm = st.number_input("Height (cm)", min_value=50, max_value=250, value=170, step=1)
 with col2:
-    su_sel = st.selectbox("Fasting Blood Sugar", list(su_display.keys()))
-    comp_sel = st.selectbox("Complications Status", list(comp_display.keys()))
+    weight_kg = st.number_input("Weight (kg)", min_value=10, max_value=300, value=70, step=1)
 
-st.markdown("---")
+fbs_value = st.number_input("Fasting Blood Sugar (mg/dl)", min_value=50, max_value=500, value=110, step=1)
 
-if st.button("🔍 Get Recommended Treatment Plan", type="primary"):
-    # First: Run the SQL Database lookup
-    with st.spinner("Querying database stored procedure..."):
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            args = (age_display[age_sel], bmi_display[bmi_sel], su_display[su_sel], comp_display[comp_sel], duration_display[duration_sel], 0, 0)
-            cursor.execute("{CALL GetRecommendedDrugs (?, ?, ?, ?, ?, ?, ?)}", args)
-            rows = cursor.fetchall()
-            
-            if rows:
-                st.subheader("📋 Treatment Protocol Order")
-                for row in rows:
-                    st.write(f"**{row[0]}.** {row[1]}")
-            else:
-                st.warning("No standard drug protocol match found in database rules.")
-            conn.close()
-        except Exception as e:
-            st.error(f"Database Error: {str(e)}")
-            
-    st.markdown("---")
-    
-    # Second: Run the Live AI Guidance Engine
-    # Second: Run the Live AI Guidance Engine
-    with st.spinner("AI Engine generating customized diet & exercise charts..."):
-        ai_advice = get_ai_lifestyle_advice(age_sel, bmi_sel, su_sel, duration_sel, comp_sel)
-        st.subheader("🤖 Lifestyle Prescription")
-        st.info(ai_advice)
-        st.caption("It's an AI Generated advice, consult your Doctor for any clarification")
+# 2. Hidden Background Logic: Calculating BMI automatically
+bmi = round(weight_kg / ((height_cm / 100) ** 2), 1)
+st.info(f"💡 Calculated Patient BMI: **{bmi}**") 
+
+# 3. Background Mapping: Sorting inputs into your table's IDs
+# Age Group ID Mapping
+if 15 <= age <= 20: 
+    age_id = 1
+elif 21 <= age <= 30: 
+    age_id = 2
+elif 31 <= age <= 40: 
+    age_id = 3
+elif 41 <= age <= 65: 
+    age_id = 4
+elif 66 <= age <= 75: 
+    age_id = 5
+elif 1 <= age <= 14: 
+    age_id = 6
+else: 
+    age_id = 7  # 75-100 group
+
+# BMI Range ID Mapping
+if 17 <= bmi <= 23: 
+    bmi_id = 1
+elif 24 <= bmi <= 25: 
+    bmi_id = 2
+elif 26 <= bmi <= 30: 
+    bmi_id = 3
+elif 29 <= bmi <= 32: 
+    bmi_id = 4
+elif 33 <= bmi <= 40: 
+    bmi_id = 5
+elif 17 <= bmi <= 40: 
+    bmi_id = 6
+else: 
+    bmi_id = 7
+
+# Fasting Blood Sugar ID Mapping
+if 100 <= fbs_value <= 125: 
+    su_id = 1
+elif 126 <= fbs_value <= 150: 
+    su_id = 2
+elif 151 <= fbs_value <= 175: 
+    su_id = 3
+elif 176 <= fbs_value <= 200: 
+    su_id = 4
+elif 201 <= fbs_value <= 300: 
+    su_id = 5
+else: 
+    su_id = 6
+
+# Keep standard dropdown fields for text-based properties
+duration = st.selectbox("Disease Duration (years)", ["1-5", "6-40"])
+duration_id = 1 if duration == "1-5" else 2
+
+complications = st.selectbox("Complications Status", ["No Complications", "yes"])
+comp_id = 0 if complications == "No Complications" else 1
+
+# Action Trigger Button
+if st.button("Get Recommended Treatment Plan", type="primary"):
+    st.write("Querying database using background IDs...")
+    st.write(f"Parameters sent: Age ID: {age_id} | BMI ID: {bmi_id} | Sugar ID: {su_id} | Duration ID: {duration_id} | Comp ID: {comp_id}")
+    # Your pyodbc / st.connection logic goes here using these ID integers

@@ -1,11 +1,14 @@
 import streamlit as st
+import pyodbc
 
 st.set_page_config(page_title="T2D Recommendation System", layout="centered")
 
 st.title("🏥 Type 2 Diabetes Treatment Selector")
 st.write("Enter raw patient metrics below. The application will compute ranges and query recommendations automatically.")
 
-# 1. Clean Numeric User Inputs (Hides the old range dropdowns)
+# =========================================================================
+# 1. RAW NUMERIC INPUTS (Hides the old range dropdown selectors)
+# =========================================================================
 age = st.number_input("Patient Age (years)", min_value=1, max_value=120, value=30, step=1)
 
 col1, col2 = st.columns(2)
@@ -16,12 +19,23 @@ with col2:
 
 fbs_value = st.number_input("Fasting Blood Sugar (mg/dl)", min_value=50, max_value=500, value=110, step=1)
 
-# 2. Hidden Background Logic: Calculating BMI automatically
+# Keep standard dropdown fields for text-based non-calculated properties
+duration = st.selectbox("Disease Duration (years)", ["1-5", "6-40"])
+duration_id = 1 if duration == "1-5" else 2
+
+complications = st.selectbox("Complications Status", ["No Complications", "yes"])
+comp_id = 0 if complications == "No Complications" else 1
+
+
+# =========================================================================
+# 2. HIDDEN BACKGROUND LOGIC (Automated Formula Tracking)
+# =========================================================================
+# Formula calculation for BMI
 bmi = round(weight_kg / ((height_cm / 100) ** 2), 1)
 st.info(f"💡 Calculated Patient BMI: **{bmi}**") 
 
-# 3. Background Mapping: Sorting inputs into your table's IDs
-# Age Group ID Mapping
+# Background Mapping: Automatically directing values to correct table IDs
+# Age Group Range Routing
 if 15 <= age <= 20: 
     age_id = 1
 elif 21 <= age <= 30: 
@@ -37,7 +51,7 @@ elif 1 <= age <= 14:
 else: 
     age_id = 7  # 75-100 group
 
-# BMI Range ID Mapping
+# BMI Range Routing
 if 17 <= bmi <= 23: 
     bmi_id = 1
 elif 24 <= bmi <= 25: 
@@ -53,7 +67,7 @@ elif 17 <= bmi <= 40:
 else: 
     bmi_id = 7
 
-# Fasting Blood Sugar ID Mapping
+# Fasting Blood Sugar Range Routing
 if 100 <= fbs_value <= 125: 
     su_id = 1
 elif 126 <= fbs_value <= 150: 
@@ -67,19 +81,15 @@ elif 201 <= fbs_value <= 300:
 else: 
     su_id = 6
 
-# Keep standard dropdown fields for text-based properties
-duration = st.selectbox("Disease Duration (years)", ["1-5", "6-40"])
-duration_id = 1 if duration == "1-5" else 2
 
-complications = st.selectbox("Complications Status", ["No Complications", "yes"])
-comp_id = 0 if complications == "No Complications" else 1
-
- # Action Trigger Button
+# =========================================================================
+# 3. ACTION TRIGGER: FETCH FROM AZURE DATABASE & DISPLAY EXACT FIELDS
+# =========================================================================
 if st.button("Get Recommended Treatment Plan", type="primary"):
-    st.write("🔄 Querying database using background IDs...")
+    st.write("🔄 Querying database using hidden background IDs...")
     
     try:
-        # 1. Build the database connection string
+        # Build the database connection string using your Streamlit Secrets variables
         conn_str = (
             f"DRIVER={{ODBC Driver 17 for SQL Server}};"
             f"SERVER={st.secrets['server']};"
@@ -91,15 +101,15 @@ if st.button("Get Recommended Treatment Plan", type="primary"):
             "Connection Timeout=30;"
         )
         
-        # 2. Open database connection
+        # Connect to server
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
         
-        # 3. Parameterized SQL query
-        # ⚠️ Change 'your_table_name' below to your actual Azure SQL table name!
+        # SQL Query statement matching your map table exactly
+        # ⚠️ CRITICAL: Replace 'your_table_name' with your actual Azure SQL database table name!
         query = """
             SELECT drug_recommendation, hypoglycemia_alert, lifestyle_prescription
-            FROM your_table_name 
+            FROM [mn_diabetes_tt_gen-db] 
             WHERE age_id = ? 
               AND bmi_id = ? 
               AND su_id = ? 
@@ -107,31 +117,28 @@ if st.button("Get Recommended Treatment Plan", type="primary"):
               AND comp_id = ?
         """
         
-        # 4. Execute the query using the background variables
         cursor.execute(query, (age_id, bmi_id, su_id, duration_id, comp_id))
         row = cursor.fetchone()
         
-        # 5. Render database fields directly onto the screen layout
         if row:
-            st.success("✅ Records successfully retrieved from database!")
+            st.success("✅ Records successfully retrieved from database mapping matrices!")
             
-            # Area 1: Recommended Treatment Plan
+            # Area 1: Treatment Protocol Order output
             st.header("💉 Recommended Treatment Plan")
-            st.write(row[0])
+            st.write(str(row[0]))
             
-            # Area 2: Hypoglycemia Alert
+            # Area 2: Safety Hypoglycemia Alert output
             st.warning("⚠️ Critical Safety Monitor: Hypoglycemia Alert Protocols")
-            st.write(row[1])
+            st.write(str(row[1]))
             
-            # Area 3: Lifestyle Prescription
+            # Area 3: Lifestyle Prescription output
             st.header("🥗 Structured Lifestyle Prescription Matrix")
-            st.write(row[2])
+            st.write(str(row[2]))
             
         else:
-            st.warning("⚠️ No exact clinical match found in the database matrix for these specific ID parameters.")
-            st.caption(f"Debug Info: Sent IDs -> Age:{age_id}, BMI:{bmi_id}, Sugar:{su_id}, Duration:{duration_id}, Comp:{comp_id}")
+            st.warning("⚠️ No exact clinical match found in the database matrix for these specific tracking ID configurations.")
+            st.caption(f"Debug Matrix Tracker: Age ID:{age_id} | BMI ID:{bmi_id} | Sugar ID:{su_id} | Duration ID:{duration_id} | Comp ID:{comp_id}")
             
-        # 6. Clean close operations
         cursor.close()
         conn.close()
         

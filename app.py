@@ -109,7 +109,7 @@ if st.button("Get Recommended Treatment Plan", type="primary"):
         # ⚠️ CRITICAL: Replace 'your_table_name' with your actual Azure SQL database table name!
         query = """
             SELECT drug_recommendation, hypoglycemia_alert, lifestyle_prescription
-            FROM [dbo].[Copy of 7.29.2026 9.25.24 PM - data to import 3 rule data 3.3]
+            FROM [dbo].[Copy of 7.29.2026 9.25.24 PM - data to import 3.cvs rule data 5]
             WHERE age_id = ? 
               AND bmi_id = ? 
               AND su_id = ? 

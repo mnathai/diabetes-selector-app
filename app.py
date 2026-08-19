@@ -114,22 +114,25 @@ if st.button("Get Recommended Treatment Plan", type="primary"):
     # =========================================================================
     # 4. AI CONTENT GENERATION ENGINE (Restores your detailed layouts)
     # =========================================================================
-    st.write("🤖 Generating detailed clinical layout via Gemini AI engine...")
-    try:
-       # Force the exact key text extraction directly
-    api_key_string = st.secrets.get("gemini_api_key") or st.secrets.get("GEMINI_API_KEY")
-    
-    if not api_key_string:
-        st.error("⚠️ Configuration Error: Gemini API key is missing from Streamlit secrets setup.")
-        st.stop()
-    
-    try:
+    st.write("🔄 Generating detailed clinical layout via Gemini AI engine...")
+
+# 1. Get the API Key from secrets
+api_key_string = st.secrets.get("gemini_api_key") or st.secrets.get("GEMINI_API_KEY")
+
+# 2. Check if the key exists
+if not api_key_string:
+    st.error("⚠️ Configuration Error: Gemini API key is missing from Streamlit secrets setup.")
+    st.stop()
+
+# 3. Safely initialize the Gemini Client
+try:
         client = genai.Client(api_key=api_key_string)
-    except Exception as e:
+except Exception as e:
         st.error(f"❌ Failed to initialize Gemini Client: {e}")
         st.stop()
-        
-        ai_prompt = f"""
+
+# 4. Set up your prompt (Leave line 132 and below exactly as they were)
+ai_prompt = f"""
         You are an advanced medical assistant. Generate a highly detailed Type 2 Diabetes treatment printout based on the following verified database result:
         - Matched Treatment Strategy: {matched_drug}
         - Patient Metrics: Age {age}, BMI {bmi}, Fasting Blood Sugar {fbs_value} mg/dl.

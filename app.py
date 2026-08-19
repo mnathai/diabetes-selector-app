@@ -116,9 +116,9 @@ if st.button("Get Recommended Treatment Plan", type="primary"):
     # =========================================================================
     st.write("🤖 Generating detailed clinical layout via Gemini AI engine...")
     try:
-        # Initialize the new Google GenAI client structure
-        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
-        
+       # Force the exact key text extraction directly
+        api_key_string = st.secrets.get("gemini_api_key") or st.secrets.get("GEMINI_API_KEY")
+        client = genai.Client(api_key=api_key_string)
         ai_prompt = f"""
         You are an advanced medical assistant. Generate a highly detailed Type 2 Diabetes treatment printout based on the following verified database result:
         - Matched Treatment Strategy: {matched_drug}

@@ -130,7 +130,26 @@ try:
 except Exception as e:
         st.error(f"❌ Failed to initialize Gemini Client: {e}")
         st.stop()
+# Place these lines right ABOVE line 134:
+age = st.number_input("Patient Age", min_value=1, max_value=120, value=45)
+bmi = st.number_input("Patient BMI", min_value=10.0, max_value=60.0, value=25.0)
+fbs_value = st.number_input("Fasting Blood Sugar (mg/dL)", min_value=50, max_value=500, value=130)
+matched_drug = st.selectbox(
+    "Select Treatment Strategy", 
+    [
+        "Metformin", 
+        "Glimepiride", 
+        "Gliclazide",      # Added (Sulfonylurea)
+        "Sitagliptin",     # Added (DPP-4 inhibitor)
+        "Linagliptin",     # Added (DPP-4 inhibitor)
+        "Semaglutide",     # Added (GLP-1 receptor agonist)
+        "Empagliflozin", 
+        "Insulin"
+    ]
+)
 
+# Line 134
+# # 4. Set up your prompt...
 # 4. Set up your prompt (Leave line 132 and below exactly as they were)
 ai_prompt = f"""
         You are an advanced medical assistant. Generate a highly detailed Type 2 Diabetes treatment printout based on the following verified database result:

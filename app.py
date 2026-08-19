@@ -147,8 +147,8 @@ ai_prompt = f"""
 
         3. Lifestyle Prescription (In Hindi language text):
         Provide detailed personalized nutrition matrices (including complex carbs, protein targets, low glycemic indices) and tailored physical activity constraints (aerobic minutes targets, sedentary rules, and resistance exercises) entirely in clear Hindi text points.
-        """
-        
+"""
+try:        
         response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=ai_prompt,

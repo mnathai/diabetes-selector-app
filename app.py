@@ -105,16 +105,12 @@ if st.button("Get Recommended Treatment Plan", type="primary"):
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
         
-        # Combined SQL execution to find the correct text mappings
+        # Relational SQL query to look up parameters in rule data 3.3 and fetch text from the drug table
         query = """
-            SELECT d.drug, s.SafetyAlertText, c.ContraindicationText
+            SELECT d.drug
             FROM [dbo].[Copy of 7.29.2026 9.25.24 PM - data to import 3 rule data 3.3] r
-            LEFT JOIN [dbo].[Copy of 7.29.2026 9.25.24 PM - data to import 3-category-data drug] d 
+            INNER JOIN [dbo].[Copy of 7.29.2026 9.25.24 PM - data to import 3-category-data drug] d 
                 ON r.drug_id = d.drug_id
-            LEFT JOIN [dbo].[Biometric_Safety_Alerts] s 
-                ON r.age_id = s.age_id
-            LEFT JOIN [dbo].[Clinical_Contraindications] c 
-                ON r.comp_id = c.comp_id
             WHERE r.age_id = ? 
               AND r.bmi_id = ? 
               AND r.su_id = ? 
@@ -126,23 +122,24 @@ if st.button("Get Recommended Treatment Plan", type="primary"):
         row = cursor.fetchone()
         
         if row:
-            st.success("✅ Records successfully retrieved from database mapping matrices!")
+            st.success("✅ Records successfully retrieved from database matrix!")
+            matched_drug = row[0]
             
-            # Area 1: Treatment Protocol Output (Pulls the name from column 0)
+            # Area 1: Treatment Protocol Order output
             st.header("💉 Recommended Treatment Plan")
-            st.write(f"The recommended drug for this metric profile is: **{row[0]}**")
+            st.write(f"Based on background calculations, the recommended medication is: **{matched_drug}**")
             
-            # Area 2: Safety Hypoglycemia Alert Output (Pulls the text from column 1)
+            # Area 2: Safety Hypoglycemia Alert output
             st.warning("⚠️ Critical Safety Monitor: Hypoglycemia Alert Protocols")
-            st.write(row[1] if row[1] else "Standard glucose warning precautions apply.")
+            st.write(f"Standard safety thresholds apply for **{matched_drug}**. Review the Rule of 15 if blood sugar drops below 70 mg/dl.")
             
-            # Area 3: Lifestyle Prescription Output (Pulls the text from column 2)
+            # Area 3: Lifestyle Prescription output
             st.header("🥗 Structured Lifestyle Prescription Matrix")
-            st.write(row[2] if row[2] else "Engage in 150 minutes of moderate aerobic exercise weekly.")
+            st.write("Maintain a low-glycemic nutrition plan and complete 150 minutes of moderate-intensity exercise weekly.")
             
         else:
             st.warning("⚠️ No exact clinical match found in the database matrix for these specific tracking ID configurations.")
-            st.caption(f"Debug Matrix Tracker: Age ID:{age_id} | BMI ID:{bmi_id} | Sugar ID:{su_id} | Duration ID:{duration_id} | Comp ID:{comp_id}")
+            st.caption(f"Debug Info: Sent IDs -> Age:{age_id}, BMI:{bmi_id}, Sugar:{su_id}, Duration:{duration_id}, Comp:{comp_id}")
             
         cursor.close()
         conn.close()

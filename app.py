@@ -158,6 +158,6 @@ try:
         st.markdown(response.text)
         st.success("🎉 Comprehensive management guidelines completely restored!")
         
-    except Exception as ai_err:
+except Exception as ai_err:
         st.error("❌ Failed to communicate with the Gemini AI processing server.")
         st.code(str(ai_err))

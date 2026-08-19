@@ -150,8 +150,8 @@ ai_prompt = f"""
         """
         
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=ai_prompt,
+        model="gemini-2.5-flash",
+        contents=ai_prompt,
         )
         
         # Display the complete layout straight onto your screen panels

@@ -8,7 +8,7 @@ from google import genai
 # ==========================================
 
 def get_db_connection():
-    """Establishes connection with the correct parameter order."""
+    """Establishes connection cleanly using your corrected dynamic secrets configuration."""
     conn_str = (
         "Driver={ODBC Driver 17 for SQL Server};"
         f"Server={st.secrets['server']};"
@@ -16,7 +16,6 @@ def get_db_connection():
         f"Uid={st.secrets['username']};"
         f"Pwd={st.secrets['password']};"
     )
-    return pyodbc.connect(conn_str)
     return pyodbc.connect(conn_str)
 def map_inputs_to_ids(age, bmi, fbs, duration_text, complication_text):
     """Maps raw numeric interface inputs to your database category IDs."""

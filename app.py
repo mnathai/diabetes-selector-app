@@ -105,7 +105,7 @@ try:
     query = """
         SELECT r.display_order, d.drug
         FROM [dbo].[Copy of 7.29.2026 9.25.24 PM - data to import 3 rule data 3.3] r
-        INNER JOIN [dbo].[Drug_Dosage_Rules] d ON r.drug_id = d.drug_id
+        INNER JOIN [dbo].[Drug_Dosage_Rules] d ON r.Drug_id = d.drug_id
         WHERE r.duration_id = ? 
           AND r.comp_id = ? 
           AND r.age_id = ? 

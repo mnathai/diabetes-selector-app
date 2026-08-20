@@ -15,6 +15,7 @@ def get_db_connection():
         f"Database={st.secrets['database']};"
         f"Uid={st.secrets['username']};"
         f"Pwd={st.secrets['password']};"
+        "Authentication=ActiveDirectoryPassword;" # 🔑 Tells Azure to authenticate via Microsoft Entra ID
     )
     return pyodbc.connect(conn_str)
 def map_inputs_to_ids(age, bmi, fbs, duration_text, complication_text):

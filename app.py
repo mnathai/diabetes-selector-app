@@ -8,13 +8,14 @@ from google import genai
 # ==========================================
 
 def get_db_connection():
-    """Establishes connection securely by completely bypassing text formatting errors."""
+    """Establishes connection cleanly using safe bracket encapsulation tags."""
     conn_str = (
         "Driver={ODBC Driver 17 for SQL Server};"
         "Server=diabetesselector-db-server.database.windows.net;"
         "Database=mn_diabetes_tt_gen-db;"
-        "Uid=dr.mnathai@gmail.com;"
+        "Uid=[dr.mnathai@gmail.com];"            # 🛡️ Bracket tags protect the '@' symbol from splitting
         "Pwd=Mann@1234;"
+        "Authentication=ActiveDirectoryPassword;" # 🔑 Tells Azure to authenticate via Entra ID
     )
     return pyodbc.connect(conn_str)
 def map_inputs_to_ids(age, bmi, fbs, duration_text, complication_text):

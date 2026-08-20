@@ -8,15 +8,15 @@ from google import genai
 # ==========================================
 
 def get_db_connection():
-    """Establishes connection cleanly with an explicit network timeout buffer."""
+    """Establishes connection with the correct parameter order."""
     conn_str = (
         "Driver={ODBC Driver 17 for SQL Server};"
         f"Server={st.secrets['server']};"
         f"Database={st.secrets['database']};"
         f"Uid={st.secrets['username']};"
         f"Pwd={st.secrets['password']};"
-        "Timeout=30;" # ⏳ Gives the cloud server 30 seconds to connect instead of 15
     )
+    return pyodbc.connect(conn_str)
     return pyodbc.connect(conn_str)
 def map_inputs_to_ids(age, bmi, fbs, duration_text, complication_text):
     """Maps raw numeric interface inputs to your database category IDs."""

@@ -7,17 +7,15 @@ from google import genai
 # ==========================================
 
 def get_db_connection():
-    """Establishes connection using your exact Streamlit secrets keys."""
+    """Establishes connection to your SQL Server database cleanly."""
     conn_str = (
         "Driver={ODBC Driver 17 for SQL Server};"
-        f"Server={st.secrets['server']};"
-        f"Database={st.secrets['database']};"
-        f"Uid={st.secrets['username']};"
-        f"Pwd={st.secrets['password']};"
+        "Server=diabetesselector-db-server.database.windows.net;"
+        "Database=mn_diabetes_tt_gen-db;"
+        "Uid=mnaithai;"
+        "Pwd=Mann@1234;"
     )
     return pyodbc.connect(conn_str)
-    return pyodbc.connect(conn_str)
-
 def map_inputs_to_ids(age, bmi, fbs, duration_text, complication_text):
     """Maps raw numeric interface inputs to your database category IDs."""
     

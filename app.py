@@ -101,11 +101,11 @@ try:
         age, calculated_bmi, fbs_value, duration_text, complication_text
     )
     
-    # Query your specific mapping junction table
+    # ⚡ Bypasses column mapping issues by using an inner select block
     query = """
-        SELECT r.display_order, d.drug
+        SELECT r.display_order, 
+               (SELECT d.drug FROM [dbo].[Drug_Dosage_Rules] d WHERE d.drug_id = r.DrugId) as drug
         FROM [dbo].[Copy of 7.29.2026 9.25.24 PM - data to import 3 rule data 3.3] r
-        INNER JOIN [dbo].[Drug_Dosage_Rules] d ON r.Drug_id = d.drug_id
         WHERE r.duration_id = ? 
           AND r.comp_id = ? 
           AND r.age_id = ? 
